@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(req: Request) {
+  let messages: any[] = [];
   try {
-    const { messages, candidate, jd } = await req.json();
+    const body = await req.json();
+    messages = body.messages || [];
+    const { candidate, jd } = body;
 
     const apiKey = process.env.GEMINI_API_KEY;
     
@@ -19,7 +22,10 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
 
     // Format the conversation history for the prompt
     const chatHistoryText = messages.map((m: any) => `${m.role === 'user' ? 'Candidate' : 'AI Recruiter'}: ${m.content}`).join('\n');
@@ -38,7 +44,7 @@ Here is the conversation so far:
 ${chatHistoryText}
 
 Your task:
-1. Generate the next message from the AI Recruiter. You should be professional, engaging, and try to gauge their interest, salary expectations, and timeline. Keep your response brief and conversational (1-3 sentences max).
+1. Generate the next message from the AI Recruiter. You should be professional, engaging, and try to gauge their interest. Keep your response brief (1-3 sentences max). IMPORTANT: If the candidate clearly expresses that they are NOT interested or says "no", politely conclude the conversation immediately and wish them well. Do not pressure them or ask further questions.
 2. Calculate the current "Interest Score" from 0 to 100 based on the candidate's enthusiasm, responsiveness, and alignment in the chat history.
 
 Return your response ONLY as a JSON object with two fields:
@@ -49,10 +55,7 @@ Do not include markdown formatting like \`\`\`json.
 `;
 
     const result = await model.generateContent(prompt);
-    let text = result.response.text().trim();
-    if (text.startsWith('\`\`\`json')) text = text.replace(/\`\`\`json/g, '');
-    if (text.startsWith('\`\`\`')) text = text.replace(/\`\`\`/g, '');
-    
+    const text = result.response.text();
     const parsedResult = JSON.parse(text);
 
     return NextResponse.json({ 
@@ -60,8 +63,15 @@ Do not include markdown formatting like \`\`\`json.
       interestScore: parsedResult.interestScore
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat API Error:", error);
+    if (error.status === 429 || error.message?.includes('429')) {
+      const isCandidateInterested = messages[messages.length - 1]?.content.toLowerCase().includes('yes') || messages[messages.length - 1]?.content.toLowerCase().includes('interest');
+      return NextResponse.json({ 
+        reply: "I understand. (Simulated response due to API rate limit, please wait 30s)",
+        interestScore: isCandidateInterested ? 85 : 40
+      });
+    }
     return NextResponse.json({ error: "Failed to process chat" }, { status: 500 });
   }
 }

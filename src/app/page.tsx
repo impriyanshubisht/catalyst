@@ -114,9 +114,7 @@ export default function Home() {
           <div className="flex items-center gap-2 text-emerald-400">
             <BrainCircuit className="w-6 h-6" />
             <span className="text-xl font-bold tracking-tight text-white">Catalyst</span>
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium ml-2 border border-emerald-500/20">
-              Agent Workspace
-            </span>
+
           </div>
           <div className="text-sm text-neutral-400 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -223,17 +221,13 @@ export default function Home() {
                         : "bg-neutral-900/50 border-neutral-800 hover:bg-neutral-800 hover:border-neutral-700"
                     )}
                   >
-                    {/* Rank Badge */}
-                    <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
-                      <div className="absolute top-3 -right-6 bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-wider py-1 w-24 text-center transform rotate-45 border-y border-neutral-700 shadow-sm">
-                        #{i + 1}
-                      </div>
-                    </div>
-
                     <div className="flex items-start gap-4">
                       <img src={c.avatarUrl} alt={c.name} className="w-12 h-12 rounded-full border border-neutral-700 group-hover:border-emerald-500/50 transition-colors" />
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                          <span className="bg-neutral-800 text-neutral-400 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border border-neutral-700 shadow-sm">
+                            #{i + 1}
+                          </span>
                           {c.name}
                         </h3>
                         <p className="text-sm text-neutral-400 flex items-center gap-3 mt-1">
